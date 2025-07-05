@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tic-Tac-Toe Glow</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #190a3c, #331a61, #472b81);
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .container {
+            text-align: center;
+            transition: opacity 0.5s ease-in-out;
+            z-index: 2;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            color: #c084fc;
+            text-shadow: 0 0 10px #c084fc;
+        }
+
+        .mode-toggle {
+            margin-bottom: 20px;
+        }
+
+        .mode-toggle button {
+            background-color: transparent;
+            border: 2px solid #7dd3fc;
+            color: #7dd3fc;
+            padding: 10px 20px;
+            margin: 0 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 8px #7dd3fc;
+        }
+
+        .mode-toggle button:hover {
+            background-color: #7dd3fc;
+            color: #000;
+            box-shadow: 0 0 15px #7dd3fc, 0 0 25px #7dd3fc;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .cell {
+            width: 100px;
+            height: 100px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 2px solid #fff;
+            font-size: 2.5rem;
+            color: #a5f3fc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+
+        .cell:hover {
+            background-color: rgba(165, 243, 252, 0.1);
+            box-shadow: 0 0 20px #a5f3fc, 0 0 40px #a5f3fc;
+        }
+
+        .status {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: #fff;
+            text-shadow: 0 0 5px #fff;
+        }
+
+        .reset {
+            padding: 10px 25px;
+            background-color: transparent;
+            border: 2px solid #c084fc;
+            color: #c084fc;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 0 10px #c084fc;
+            transition: all 0.3s ease;
+        }
+
+        .reset:hover {
+            background-color: #c084fc;
+            color: #000;
+            box-shadow: 0 0 20px #c084fc, 0 0 40px #c084fc;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            color: #7dd3fc;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 3rem;
+            font-weight: bold;
+            text-shadow: 0 0 20px #7dd3fc, 0 0 40px #7dd3fc;
+            opacity: 0;
+            z-index: 5;
+            transition: opacity 1s ease-in-out;
+            pointer-events: none;
+        }
+
+        .overlay.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .overlay button {
+            margin-top: 25px;
+            font-size: 1.2rem;
+            padding: 10px 30px;
+            background: transparent;
+            color: #a5f3fc;
+            border: 2px solid #a5f3fc;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 12px #a5f3fc;
+        }
+
+        .overlay button:hover {
+            background-color: #a5f3fc;
+            color: #000;
+            box-shadow: 0 0 25px #a5f3fc, 0 0 45px #a5f3fc;
+        }
+
+        .hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container" id="gameContainer">
+        <h1>Tic-Tac-Toe</h1>
+        <div class="mode-toggle">
+            <button onclick="setMode('pvp')">Player vs Player</button>
+            <button onclick="setMode('cpu')">Player vs Computer</button>
+        </div>
+        <div class="status" id="status">Choose mode to start playing</div>
+        <div class="board" id="board">
+            <div class="cell" onclick="makeMove(0)"></div>
+            <div class="cell" onclick="makeMove(1)"></div>
+            <div class="cell" onclick="makeMove(2)"></div>
+            <div class="cell" onclick="makeMove(3)"></div>
+            <div class="cell" onclick="makeMove(4)"></div>
+            <div class="cell" onclick="makeMove(5)"></div>
+            <div class="cell" onclick="makeMove(6)"></div>
+            <div class="cell" onclick="makeMove(7)"></div>
+            <div class="cell" onclick="makeMove(8)"></div>
+        </div>
+        <button class="reset" onclick="resetGame()">Reset</button>
+    </div>
+
+    <div class="overlay" id="overlay">
+        <div id="winnerText">X Wins!</div>
+        <button onclick="resetGame()">Rematch</button>
+    </div>
+
+    <script>
+        let board = ["", "", "", "", "", "", "", "", ""];
+        let currentPlayer = "X";
+        let gameActive = false;
+        let mode = null;
+
+        const statusDisplay = document.getElementById("status");
+        const cells = document.querySelectorAll(".cell");
+        const container = document.getElementById("gameContainer");
+        const overlay = document.getElementById("overlay");
+        const winnerText = document.getElementById("winnerText");
+
+        const winConditions = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8],
+            [0, 3, 6], [1, 4, 7], [2, 5, 8],
+            [0, 4, 8], [2, 4, 6]
+        ];
+
+        function setMode(selectedMode) {
+            mode = selectedMode;
+            resetGame();
+            gameActive = true;
+            statusDisplay.textContent = `${currentPlayer}'s turn (${mode === 'cpu' ? 'vs Computer' : 'PvP'})`;
+        }
+
+        function makeMove(index) {
+            if (!gameActive || board[index] !== "") return;
+
+            board[index] = currentPlayer;
+            cells[index].textContent = currentPlayer;
+
+            if (checkWinner(currentPlayer)) {
+                endGame(`${currentPlayer} Wins!`);
+                return;
+            }
+
+            if (board.every(cell => cell !== "")) {
+                endGame("It's a Draw!");
+                return;
+            }
+
+            currentPlayer = currentPlayer === "X" ? "O" : "X";
+            statusDisplay.textContent = `${currentPlayer}'s turn`;
+
+            if (mode === "cpu" && currentPlayer === "O") {
+                setTimeout(computerMove, 400);
+            }
+        }
+
+        function computerMove() {
+            if (!gameActive) return;
+
+            const emptyCells = board.map((v, i) => v === "" ? i : null).filter(i => i !== null);
+            const choice = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+            makeMove(choice);
+        }
+
+        function checkWinner(player) {
+            return winConditions.some(combo => combo.every(index => board[index] === player));
+        }
+
+        function endGame(message) {
+            statusDisplay.textContent = "";
+            container.classList.add("hidden");
+            winnerText.textContent = message;
+            overlay.classList.add("show");
+            gameActive = false;
+        }
+
+        function resetGame() {
+            board = ["", "", "", "", "", "", "", "", ""];
+            currentPlayer = "X";
+            gameActive = !!mode;
+            overlay.classList.remove("show");
+            container.classList.remove("hidden");
+            statusDisplay.textContent = mode ? `${currentPlayer}'s turn` : "Choose mode to start playing";
+            cells.forEach(cell => cell.textContent = "");
+        }
+    </script>
+</body>
+
+</html>
